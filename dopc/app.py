@@ -5,8 +5,10 @@ from typing import List, Dict, Optional
 from haversine import haversine, Unit
 
 app = Flask(__name__)
+
 BASE_URL = "https://consumer-api.development.dev.woltapi.com/home-assignment-api/v1/venues"
-ERR_VALIDATION = "ERR_INVALID_REQUEST_PARAMS"
+
+ERR_REQUEST = "ERR_INVALID_REQUEST_PARAMS"
 ERR_NO_DELIVERY = "ERR_NO_DELIVERY"
 ERR_API = "ERR_EXTERNAL_API_FAILURE"
 ERR_SERVER = "ERR_SERVER"
@@ -42,7 +44,7 @@ def validate_params():
     }
     
 	if not all(params.values()):
-		return None, make_error(400, ERR_VALIDATION, "Missing required parameters", 
+		return None, make_error(400, ERR_REQUEST, "Missing required parameters", 
 			[{"field": f, "details": "This field is required"} for f in params if not params[f]])
 
 	# Validate that parameters have correct types and values
@@ -60,9 +62,9 @@ def validate_params():
 			errors.append({"field": "user_lon", "details": "Must be between -180 and 180"})
 
 	except (ValueError, TypeError) as err:
-		return None, make_error(400, ERR_VALIDATION, "Invalid numeric values", [{"field": str(err), "details": "Must be a number"}])
+		return None, make_error(400, ERR_REQUEST, "Invalid numeric values", [{"field": str(err), "details": "Must be a number"}])
 
-	return (None, make_error(400, ERR_VALIDATION, "Invalid values", errors)) if errors else (params, None)
+	return (None, make_error(400, ERR_REQUEST, "Invalid values", errors)) if errors else (params, None)
 
 def validate_distance_ranges(ranges):
 	"""
@@ -123,14 +125,13 @@ def get_venue_data(venue_slug: str):
 		# Extract delivery specs from the dynamic data:
 		try:
 			order_minimum_no_surcharge = int(dynamic_data['venue_raw']['delivery_specs']['order_minimum_no_surcharge'])
+			base_price = int(dynamic_data['venue_raw']['delivery_specs']['delivery_pricing']['base_price'])
+			validated_ranges, range_errors = validate_distance_ranges(dynamic_data['venue_raw']['delivery_specs']['delivery_pricing']['distance_ranges'])
+
 			if order_minimum_no_surcharge < 0:
 				errors.append({"field": "order_minimum_no_surcharge", "details": "Must be non-negative"})
-
-			base_price = int(dynamic_data['venue_raw']['delivery_specs']['delivery_pricing']['base_price'])
 			if base_price < 0:
 				errors.append({"field": "base_price", "details": "Must be non-negative"})
-		
-			validated_ranges, range_errors = validate_distance_ranges(dynamic_data['venue_raw']['delivery_specs']['delivery_pricing']['distance_ranges'])
 			if range_errors:
 				errors.extend(range_errors)
 
@@ -250,4 +251,4 @@ def calculate_delivery_price():
 	return jsonify(response), 200
 
 if __name__ == '__main__':
-   app.run(debug=True, port=8000)
+   app.run(debug=False, port=8000)

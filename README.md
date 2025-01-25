@@ -55,7 +55,7 @@ Server runs at http://localhost:8000
 
 2. Example API call:
 ```bash
-curl "http://localhost:8000/api/v1/delivery-order-price?venue_slug=example&cart_value=1000&user_lat=60.1699&user_lon=24.9384"
+curl "http://localhost:8000/api/v1/delivery-order-price?venue_slug=home-assignment-venue-helsinki&cart_value=1000&user_lat=60.17094&user_lon=24.93087"
 ```
 - Linux: wrap request as was made above in quotes to provide compatibility with bash / stricter zsh
 - MacOS: quotes can be omitted
