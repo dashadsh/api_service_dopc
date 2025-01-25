@@ -16,13 +16,13 @@ assignment/
 ├── dopc/
 │   └── app.py          # Main application file
 ├── tests/
-│   └── test.py         # Unit tests
+│   └── test.py         # Tests
 └── requirements.txt
 ```
 
 ## Installation
 
-1. Navigate to project root folder
+1. Navigate to the project root folder
 
 2. Create virtual environment:
 ```bash
@@ -39,16 +39,11 @@ source venv/bin/activate  # MacOS, Linux
 pip install -r requirements.txt
 ```
 
-### Dependencies
+### Dependencies:
 - Flask
 - requests
 - haversine
 - pytest
-
-Check installed dependencies:
-```bash
-pip freeze
-```
 
 ## Usage
 
@@ -62,18 +57,20 @@ Server runs at http://localhost:8000
 ```bash
 curl "http://localhost:8000/api/v1/delivery-order-price?venue_slug=example&cart_value=1000&user_lat=60.1699&user_lon=24.9384"
 ```
-Linux: wrap request as was made abowe in quotes to provide compatibility with bash / stricter zsh
-MacOS: quotes can be omitted
+- Linux: wrap request as was made above in quotes to provide compatibility with bash / stricter zsh
+- MacOS: quotes can be omitted
 
 ## Testing
 
 Open a second terminal, navigate to the root repository.
 Activate virtual envinroment.
-Run tests:
 ```bash
 source venv/bin/activate
+```
+Run tests:
+```bash
 python3 -m pytest tests/tests.py -v
 ```
 
 ## Notes
-- Zero order price is valid (items could be paid with coupons)
+- I assume, zero order price is valid (items could be paid with coupons)
