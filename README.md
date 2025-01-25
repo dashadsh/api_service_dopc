@@ -1,6 +1,6 @@
 # Delivery Order Price Calculator
 
-REST API service that calculates delivery prices based on cart value, distance, and venue-specific rules.
+Delivery Order Price Calculator service (DOPC) - an imaginary backend service which is capable of calculating the total price and price breakdown of a delivery order.
 Made on MacOS, tested on Linux.
 
 ## Prerequisites
