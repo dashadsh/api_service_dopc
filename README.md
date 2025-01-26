@@ -63,7 +63,18 @@ curl "http://localhost:8000/api/v1/delivery-order-price?venue_slug=home-assignme
 ```
 On MacOS: quotes can be omitted
 
-## Testing
+3. Additional commands generating valid responses:
+```bash
+curl "http://localhost:8000/api/v1/delivery-order-price?venue_slug=home-assignment-venue-helsinki&cart_value=1000&user_lat=60.18094&user_lon=24.93087"
+
+curl "http://localhost:8000/api/v1/delivery-order-price?venue_slug=home-assignment-venue-stockholm&cart_value=10000&user_lat=59.35683&user_lon=18.03150"
+
+curl "http://localhost:8000/api/v1/delivery-order-price?venue_slug=home-assignment-venue-berlin&cart_value=1000&user_lat=52.51032&user_lon=13.45361"
+
+curl "http://localhost:8000/api/v1/delivery-order-price?venue_slug=home-assignment-venue-tokyo&cart_value=700&user_lat=35.65591&user_lon=139.71153"
+```
+
+## Testing using Pytest
 
 Open a second terminal, navigate to the root repository.
 Activate virtual envinroment.
