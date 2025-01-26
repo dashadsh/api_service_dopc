@@ -3,6 +3,41 @@
 Delivery Order Price Calculator service (DOPC) - an imaginary backend service which is capable of calculating the total price and price breakdown of a delivery order.
 Made on MacOS, tested on Linux.
 
+## Description
+
+When successful request is made, endpoint returns a JSON response in the following format:
+```
+{
+  "total_price": 1190,
+  "small_order_surcharge": 0,
+  "cart_value": 1000,
+  "delivery": {
+    "fee": 190,
+    "distance": 177
+  }
+}
+```
+In case of error, endpoint returns a JSON response in following format:
+````
+{
+  "status_code": 400, 
+  "error": {
+    "code": "ERR_INVALID_REQUEST_PARAMS", # Machine readable error message
+    "message": "Missing required parameters", # Human readable error message
+    "errors": [
+      {
+        "field": "user_lat",  # Parameter causing issue
+        "details": "This field is required" # Details about the issue
+      },
+      {
+        "field": "user_lon",
+        "details": "This field is required"
+      }
+    ]
+  }
+}
+```
+
 ## Prerequisites
 
 - Python 3.12.3-3.13.1
