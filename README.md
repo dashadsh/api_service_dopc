@@ -18,7 +18,7 @@ When successful request is made, endpoint returns a JSON response in the followi
 }
 ```
 In case of error, endpoint returns a JSON response in following format:
-````
+```
 {
   "status_code": 400, 
   "error": {
