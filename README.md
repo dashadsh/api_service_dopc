@@ -74,3 +74,6 @@ python3 -m pytest tests/tests.py -v
 
 ## Notes
 - I assume, zero order price is valid (items could be paid with coupons)
+
+(c) Daria Goremykina
+d.goremykina@gmail.com
