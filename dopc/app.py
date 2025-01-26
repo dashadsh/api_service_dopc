@@ -1,6 +1,7 @@
 # dopc/app.py
-from flask import Flask, request, jsonify
+from flask import Flask, request
 import requests
+import json
 from typing import List, Dict, Optional
 from haversine import haversine, Unit
 
@@ -28,7 +29,12 @@ def make_error(status_code: int, code: str, message: str, errors: List[Dict[str,
 			"errors": errors or []
         }
     }
-	return jsonify(response), status_code
+	# jsonify couldn't be used because of formatting requirements => customizing Flask response
+	return app.response_class(
+		json.dumps(response, indent=2) + "\n",
+		status=status_code,
+		mimetype='application/json'
+    )
 
 def validate_params():
 	"""
@@ -249,7 +255,11 @@ def calculate_delivery_price():
 	if error:
 		return error
 
-	return jsonify(response), 200
+	return app.response_class(
+		json.dumps(response, indent=2) + "\n",
+		status=200,
+		mimetype='application/json'
+	)
 
 if __name__ == '__main__':
    app.run(debug=False, port=8000)

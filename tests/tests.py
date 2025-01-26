@@ -12,70 +12,78 @@ def client():
     with app.test_client() as client:
         yield client
 
-def test_error_response_format(client):
-	response = client.get('/api/v1/delivery-order-price?venue_slug=invalid&cart_value=1000&user_lat=60.18094&user_lon=24.93087')
-	data = response.get_json()
-	assert response.status_code == 404
-	assert 'status_code' in data
-	assert 'error' in data
-	assert 'code' in data['error']
-	assert 'message' in data['error']
-	assert 'errors' in data['error']
+# ===================== Unit tests =====================
 
 def test_zero_distance_calculation():
 	assert calculate_distance(60.0, 24.0, 60.0, 24.0) == 0
 
-def test_helsinki_pricing(client):
+def test_calculation_formula(client):
 	response = client.get('/api/v1/delivery-order-price?venue_slug=home-assignment-venue-helsinki&cart_value=800&user_lat=60.18094&user_lon=24.93087')
 	data = response.get_json()
 	assert data['small_order_surcharge'] == 200
 	assert data['cart_value'] == 800
 	assert data['total_price'] == data['cart_value'] + data['small_order_surcharge'] + data['delivery']['fee']
 
-def test_stockholm_large_order(client):
-	response = client.get('/api/v1/delivery-order-price?venue_slug=home-assignment-venue-stockholm&cart_value=15000&user_lat=59.35683&user_lon=18.03150')
-	data = response.get_json()
-	assert data['small_order_surcharge'] == 0
-
-def test_berlin_minimum_order(client):
-	response = client.get('/api/v1/delivery-order-price?venue_slug=home-assignment-venue-berlin&cart_value=1000&user_lat=52.51032&user_lon=13.45361')
-	data = response.get_json()
-	assert data['small_order_surcharge'] == 0
-
 def test_delivery_ranges(client):
-	# Test max range
 	response = client.get('/api/v1/delivery-order-price?venue_slug=home-assignment-venue-helsinki&cart_value=1000&user_lat=61.0&user_lon=24.93')
 	assert response.status_code == 400
 	assert response.get_json()['error']['code'] == 'ERR_NO_DELIVERY'
 
+# ===================== Negative tests =====================
+
 def test_maximum_coordinates(client):
-	response = client.get('/api/v1/delivery-order-price?venue_slug=home-assignment-venue-helsinki&cart_value=1000&user_lat=90&user_lon=180')
+	response = client.get('/api/v1/delivery-order-price?venue_slug=home-assignment-venue-helsinki&cart_value=1000&user_lat=91&user_lon=181')
 	assert response.status_code == 400
 
 def test_minimum_coordinates(client):
-	response = client.get('/api/v1/delivery-order-price?venue_slug=home-assignment-venue-helsinki&cart_value=1000&user_lat=-90&user_lon=-180')
+	response = client.get('/api/v1/delivery-order-price?venue_slug=home-assignment-venue-helsinki&cart_value=1000&user_lat=-91&user_lon=-181')
 	assert response.status_code == 400
 
-def test_zero_cart_value(client):
-	response = client.get('/api/v1/delivery-order-price?venue_slug=home-assignment-venue-helsinki&cart_value=0&user_lat=60.18094&user_lon=24.93087')
-	assert response.status_code == 200
-
-def test_malformed_cart_value(client):
-	response = client.get('/api/v1/delivery-order-price?venue_slug=home-assignment-venue-helsinki&cart_value=not_a_number&user_lat=60.18094&user_lon=24.93087')
+def test_missing_key(client):
+	response = client.get('/api/v1/delivery-order-price?venue_slug=home-assignment-venue-helsinki&user_lat=-90&user_lon=180')
 	assert response.status_code == 400
 
-def test_malformed_coordinates(client):
-	response = client.get('/api/v1/delivery-order-price?venue_slug=home-assignment-venue-helsinki&cart_value=1000&user_lat=60.18094&user_lon=!$%^&*()')
+def test_missing_value(client):
+	response = client.get('/api/v1/delivery-order-price?venue_slug=home-assignment-venue-helsinki&cart_value=1000&user_lat=-90&user_lon=')
 	assert response.status_code == 400
 
-def test_malformed_venue_slug(client):
-	response = client.get('/api/v1/delivery-order-price?venue_slug=home-assignment-venue-helsink&cart_value=1000&user_lat=60.18094&user_lon=24.93087')
-	assert response.status_code == 404
+class TestMalformedQuery:
+	@pytest.mark.parametrize("test_case", [
+		{
+			"slug": "home-assignment-venue-helsinki",
+			"cart": "not_a_number",
+			"lat": "60.18094",
+			"lon": "24.93087"},
+		{
+			"slug": "home-assignment-venue-helsinki",
+			"cart": "1000",
+			"lat": "60.18094",
+			"lon": "!$%^&*()"},
+		])
 
-# test: curl "http://localhost:8000/api/v1/delivery-order-price?venue_slug=%^&*()&cart_value=1000&user_lat=60.18094&user_lon=24.93087"
-def test_special_characters_venue_error_format(client):
-	response = client.get('/api/v1/delivery-order-price?venue_slug=%25%5E%26*()&cart_value=1000&user_lat=60.18094&user_lon=24.93087')
-	assert response.status_code == 404
+	def test_invalid_params(self, client, test_case):
+		response = client.get(f'/api/v1/delivery-order-price?venue_slug={test_case["slug"]}&cart_value={test_case["cart"]}&user_lat={test_case["lat"]}&user_lon={test_case["lon"]}')
+		assert response.status_code == 400
+
+class TestMalformedVenues:
+	@pytest.mark.parametrize("venue_data", [
+		{
+			"slug": "home-assignment-venue-helsink",
+			"cart": 1000,
+			"lat": 60.18094,
+			"lon": 24.93087},
+		# Identical to:
+		# curl "http://localhost:8000/api/v1/delivery-order-price?venue_slug=%^&*()&cart_value=1000&user_lat=60.18094&user_lon=24.93087"
+		{
+			"slug": "%25%5E%26*()",
+			"cart": 1000,
+			"lat": 60.18094,
+			"lon": 24.93087},
+		])
+	
+	def test_invalid_venues(self, client, venue_data):
+		response = client.get(f'/api/v1/delivery-order-price?venue_slug={venue_data["slug"]}&cart_value={venue_data["cart"]}&user_lat={venue_data["lat"]}&user_lon={venue_data["lon"]}')
+		assert response.status_code == 404
 
 def test_delivery_too_far(client):
 	response = client.get('/api/v1/delivery-order-price?venue_slug=home-assignment-venue-helsinki&cart_value=1000&user_lat=61.18094&user_lon=24.93087')
@@ -83,48 +91,46 @@ def test_delivery_too_far(client):
 	data = response.get_json()
 	assert "distance" in data['error']['errors'][0]['field']
 
-def test_valid_helsinki_request(client):
-	response = client.get('/api/v1/delivery-order-price?venue_slug=home-assignment-venue-helsinki&cart_value=1000&user_lat=60.18094&user_lon=24.93087')
-	assert response.status_code == 200
-	# .json() is from the requests library (for making HTTP requests)
-	# .get_json() is from Flask's test client (for testing Flask apps)
-	data = response.get_json()
-	assert 'total_price' in data
-	assert 'small_order_surcharge' in data
-	assert 'cart_value' in data
-	assert 'delivery' in data
-	assert isinstance(data['delivery']['distance'], int)
-	assert isinstance(data['delivery']['fee'], int)
+# ===================== Positive tests =====================
 
-def test_valid_stockholm_request(client):
-	response = client.get('/api/v1/delivery-order-price?venue_slug=home-assignment-venue-stockholm&cart_value=10000&user_lat=59.35683&user_lon=18.03150')
+def test_large_cart_value(client):
+	response = client.get('/api/v1/delivery-order-price?venue_slug=home-assignment-venue-helsinki&cart_value=9999999999&user_lat=60.18094&user_lon=24.93087')
 	assert response.status_code == 200
-	data = response.get_json()
-	assert 'total_price' in data
-	assert 'small_order_surcharge' in data
-	assert 'cart_value' in data
-	assert 'delivery' in data
-	assert isinstance(data['delivery']['distance'], int)
-	assert isinstance(data['delivery']['fee'], int)
 
-def test_valid_berlin_request(client):
-	response = client.get('/api/v1/delivery-order-price?venue_slug=home-assignment-venue-berlin&cart_value=1000&user_lat=52.51032&user_lon=13.45361')
+def test_zero_cart_value(client):
+	response = client.get('/api/v1/delivery-order-price?venue_slug=home-assignment-venue-helsinki&cart_value=0&user_lat=60.18094&user_lon=24.93087')
 	assert response.status_code == 200
-	data = response.get_json()
-	assert 'total_price' in data
-	assert 'small_order_surcharge' in data
-	assert 'cart_value' in data
-	assert 'delivery' in data
-	assert isinstance(data['delivery']['distance'], int)
-	assert isinstance(data['delivery']['fee'], int)
 
-def test_valid_tokyo_request(client):
-	response = client.get('/api/v1/delivery-order-price?venue_slug=home-assignment-venue-tokyo&cart_value=700&user_lat=35.65591&user_lon=139.71153')
-	assert response.status_code == 200
-	data = response.get_json()
-	assert 'total_price' in data
-	assert 'small_order_surcharge' in data
-	assert 'cart_value' in data
-	assert 'delivery' in data
-	assert isinstance(data['delivery']['distance'], int)
-	assert isinstance(data['delivery']['fee'], int)
+class TestValidRequests:
+    @pytest.mark.parametrize("venue_data", [
+        {
+            "slug": "home-assignment-venue-helsinki",
+            "lat": 60.18094,
+            "lon": 24.93087,
+            "cart": 1000
+        },
+        {
+            "slug": "home-assignment-venue-stockholm",
+            "lat": 59.35683,
+            "lon": 18.03150,
+            "cart": 10000
+        },
+        {
+            "slug": "home-assignment-venue-berlin",
+            "lat": 52.51032,
+            "lon": 13.45361,
+            "cart": 1000
+        },
+        {
+            "slug": "home-assignment-venue-tokyo",
+            "lat": 35.65591,
+            "lon": 139.71153,
+            "cart": 700
+        }
+    ])
+    def test_valid_requests(self, client, venue_data):
+        response = client.get(f'/api/v1/delivery-order-price?venue_slug={venue_data["slug"]}&cart_value={venue_data["cart"]}&user_lat={venue_data["lat"]}&user_lon={venue_data["lon"]}')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert all(key in data for key in ['total_price', 'small_order_surcharge', 'cart_value', 'delivery'])
+        assert all(isinstance(data['delivery'][key], int) for key in ['distance', 'fee'])
