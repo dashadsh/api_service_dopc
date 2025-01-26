@@ -29,9 +29,9 @@ assignment/
 python3 -m venv venv
 ```
 
-3. Activate virtual environment:
+3. Activate virtual environment (command valid for MacOS, Linux):
 ```bash
-source venv/bin/activate  # MacOS, Linux
+source venv/bin/activate
 ```
 
 4. Install dependencies:
@@ -57,27 +57,28 @@ Server runs at http://localhost:8000
 ```bash
 curl http://localhost:8000/api/v1/delivery-order-price?venue_slug=home-assignment-venue-helsinki&cart_value=1000&user_lat=60.17094&user_lon=24.93087
 ```
-If using Linux: wrap request as was made above in quotes to provide compatibility with bash / stricter zsh:
+If using Linux: wrap request in quotes to provide compatibility with bash / stricter zsh (on MacOS quotes can be omitted):
 ```bash
 curl "http://localhost:8000/api/v1/delivery-order-price?venue_slug=home-assignment-venue-helsinki&cart_value=1000&user_lat=60.17094&user_lon=24.93087"
 ```
-On MacOS: quotes can be omitted
 
-3. Additional commands generating valid responses:
+3. Additional commands to do API call:
 ```bash
 curl "http://localhost:8000/api/v1/delivery-order-price?venue_slug=home-assignment-venue-helsinki&cart_value=1000&user_lat=60.18094&user_lon=24.93087"
-
+```
+```bash
 curl "http://localhost:8000/api/v1/delivery-order-price?venue_slug=home-assignment-venue-stockholm&cart_value=10000&user_lat=59.35683&user_lon=18.03150"
-
+```
+```bash
 curl "http://localhost:8000/api/v1/delivery-order-price?venue_slug=home-assignment-venue-berlin&cart_value=1000&user_lat=52.51032&user_lon=13.45361"
-
+```
+```bash
 curl "http://localhost:8000/api/v1/delivery-order-price?venue_slug=home-assignment-venue-tokyo&cart_value=700&user_lat=35.65591&user_lon=139.71153"
 ```
 
 ## Testing using Pytest
 
-Open a second terminal, navigate to the root repository.
-Activate virtual envinroment.
+Open a second terminal, navigate to the root repository. Activate virtual envinroment:
 ```bash
 source venv/bin/activate
 ```
